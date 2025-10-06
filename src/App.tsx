@@ -190,7 +190,7 @@ const filteredEvents = eventFilter === 'all'
       <header className="header">
   <div className="header-actions">
 <h1>
-  <img src="/icon-512.png" alt="Logo" style={{ width: '24px', height: '24px' }} />
+  <img src="/icon-512.png" alt="Logo" style={{ width: '40px', height: '40px' }} />
   MedStudy Planner
 </h1>
     <SettingsMenu events={events} exams={exams} onImport={handleImport} />
