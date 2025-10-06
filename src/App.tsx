@@ -9,6 +9,7 @@ import { EventModal } from './components/EventModal';
 import { ExamModal } from './components/ExamModal';
 import { createLocalDateString } from './utils/dateUtils';
 import { SettingsMenu } from './components/SettingsMenu';
+import { expandRecurringEvents } from './utils/recurrence';
 import './App.css';
 
 function App() {
@@ -140,7 +141,7 @@ function App() {
   weekEnd.setDate(weekStart.getDate() + 6);
   const weekStartStr = createLocalDateString(weekStart);
   const weekEndStr = createLocalDateString(weekEnd);
-  const weekEvents = events.filter(e => e.date >= weekStartStr && e.date <= weekEndStr);
+  const weekEvents = expandRecurringEvents(events, weekStart, weekEnd).filter(e => e.date >= weekStartStr && e.date <= weekEndStr);
   
   const passedExams = exams.filter(e => e.status === 'bestanden').length;
   const totalExams = exams.filter(e => e.status !== 'geplant').length;
@@ -150,16 +151,20 @@ function App() {
     ? (passedWithGrades.reduce((sum, e) => sum + (e.grade || 0), 0) / passedWithGrades.length).toFixed(1)
     : '-';
   
-  const upcomingEvents = events
-    .filter(e => e.date >= todayStr)
-    .sort((a, b) => {
-      if (a.date !== b.date) return a.date.localeCompare(b.date);
-      return (a.startTime || '').localeCompare(b.startTime || '');
-    })
-    .slice(0, 5);
+  const futureDate = new Date(today);
+futureDate.setDate(today.getDate() + 30); // 30 Tage voraus
+const upcomingEvents = expandRecurringEvents(events, today, futureDate)
+  .filter(e => e.date >= todayStr)
+  .sort((a, b) => {
+    if (a.date !== b.date) return a.date.localeCompare(b.date);
+    return (a.startTime || '').localeCompare(b.startTime || '');
+  })
+  .slice(0, 5);
 
   const selectedDateStr = createLocalDateString(selectedDate);
-  const selectedDateEvents = events.filter(e => e.date === selectedDateStr);
+  const selectedDateNext = new Date(selectedDate);
+selectedDateNext.setDate(selectedDate.getDate() + 1);
+const selectedDateEvents = expandRecurringEvents(events, selectedDate, selectedDateNext).filter(e => e.date === selectedDateStr);
   const selectedDateText = selectedDate.toLocaleDateString('de-DE', {
     weekday: 'long',
     day: 'numeric',
@@ -173,9 +178,12 @@ function App() {
   const percentage = total > 0 ? Math.round((passed / total) * 100) : 0;
 
   // Filter events
-  const filteredEvents = eventFilter === 'all' 
-    ? events 
-    : events.filter(e => e.category === eventFilter);
+  const futureFilterDate = new Date(today);
+futureFilterDate.setMonth(today.getMonth() + 6); // 6 Monate voraus für Filter-Ansicht
+const expandedForFilter = expandRecurringEvents(events, today, futureFilterDate);
+const filteredEvents = eventFilter === 'all' 
+  ? expandedForFilter 
+  : expandedForFilter.filter(e => e.category === eventFilter);
 
   return (
     <div className="app">

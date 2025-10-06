@@ -1,5 +1,6 @@
 import type { Event } from '../types';
 import { createLocalDateString, isToday, isSameDay } from '../utils/dateUtils';
+import { expandRecurringEvents } from '../utils/recurrence';
 
 interface CalendarProps {
   currentDate: Date;
@@ -13,6 +14,7 @@ export function Calendar({ currentDate, selectedDate, events, onDateSelect, onMo
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
   
   const monthNames = ['Januar', 'Februar', 'März', 'April', 'Mai', 'Juni',
                       'Juli', 'August', 'September', 'Oktober', 'November', 'Dezember'];
@@ -21,14 +23,20 @@ export function Calendar({ currentDate, selectedDate, events, onDateSelect, onMo
   const startOffset = firstDayOfMonth === 0 ? 6 : firstDayOfMonth - 1;
   
   const days: Date[] = [];
+  const calendarStart = new Date(year, month, 1 - startOffset);
+  const calendarEnd = new Date(year, month, 1 - startOffset + 41);
+  
   for (let i = 0; i < 42; i++) {
     const day = new Date(year, month, 1 - startOffset + i);
     days.push(day);
   }
   
+  // Expandiere wiederholende Events für den gesamten Kalender-Zeitraum
+  const expandedEvents = expandRecurringEvents(events, calendarStart, calendarEnd);
+  
   const hasEvents = (date: Date): boolean => {
     const dateStr = createLocalDateString(date);
-    return events.some(e => e.date === dateStr);
+    return expandedEvents.some(e => e.date === dateStr);
   };
   
   const weekdays = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];

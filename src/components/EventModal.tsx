@@ -17,6 +17,9 @@ export function EventModal({ isOpen, onClose, onSave, initialDate }: EventModalP
   const [endTime, setEndTime] = useState('');
   const [location, setLocation] = useState('');
   const [notes, setNotes] = useState('');
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrenceType, setRecurrenceType] = useState<Event['recurrenceType']>('weekly');
+  const [recurrenceEnd, setRecurrenceEnd] = useState('');
 
   if (!isOpen) return null;
 
@@ -33,7 +36,10 @@ export function EventModal({ isOpen, onClose, onSave, initialDate }: EventModalP
       startTime,
       endTime,
       location,
-      notes
+      notes,
+      isRecurring,
+      recurrenceType: isRecurring ? recurrenceType : undefined,
+      recurrenceEnd: isRecurring && recurrenceEnd ? recurrenceEnd : undefined
     });
 
     // Reset form
@@ -44,6 +50,9 @@ export function EventModal({ isOpen, onClose, onSave, initialDate }: EventModalP
     setEndTime('');
     setLocation('');
     setNotes('');
+    setIsRecurring(false);
+    setRecurrenceType('weekly');
+    setRecurrenceEnd('');
     
     onClose();
   };
@@ -131,6 +140,46 @@ export function EventModal({ isOpen, onClose, onSave, initialDate }: EventModalP
               placeholder="Zusätzliche Informationen..."
             />
           </div>
+          
+          <div className="form-group">
+            <label className="form-label">
+              <input
+                type="checkbox"
+                checked={isRecurring}
+                onChange={(e) => setIsRecurring(e.target.checked)}
+                style={{ marginRight: '8px' }}
+              />
+              Wiederholender Termin
+            </label>
+          </div>
+
+          {isRecurring && (
+            <>
+              <div className="form-group">
+                <label className="form-label">Wiederholung</label>
+                <select 
+                  className="form-select" 
+                  value={recurrenceType} 
+                  onChange={(e) => setRecurrenceType(e.target.value as Event['recurrenceType'])}
+                >
+                  <option value="daily">Täglich</option>
+                  <option value="weekly">Wöchentlich</option>
+                  <option value="biweekly">Alle 2 Wochen</option>
+                  <option value="monthly">Monatlich</option>
+                </select>
+              </div>
+              
+              <div className="form-group">
+                <label className="form-label">Enddatum (optional)</label>
+                <input
+                  type="date"
+                  className="form-input"
+                  value={recurrenceEnd}
+                  onChange={(e) => setRecurrenceEnd(e.target.value)}
+                />
+              </div>
+            </>
+          )}
         </div>
         
         <div className="modal-footer">
